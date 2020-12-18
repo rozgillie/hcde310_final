@@ -1,0 +1,28 @@
+<html>
+<head>
+    <title>Horoscope Playlist</title>
+    <link rel='stylesheet' type='text/css' href='/static/mystyle.css' />
+</head>
+<body>
+<header id="header">
+    <div class="container-fluid">
+
+      <div class="logo float-left">
+        <!--<h1 class="text-light"><a href="index.html"><span>Astroplay</span></a></h1>-->
+        <!-- Uncomment below if you prefer to use an image logo -->
+       <img href= "/" src="/static/logo.png" alt="" class="img-fluid" width="100" height="100">
+      </div>
+    </div>
+  </header>
+<section id="hero">
+    <div class="hero-container">
+        <h1>{{sign}}</h1>
+        <h2>{{description}}</h2>
+        <h2>Your Horoscope for today says you might be feeling {{mood}}.</h2>
+      <h2>Here's a playlist to compliment your mood:</h2>
+      <iframe src={{src}} width="500" height="750" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+    </div>
+  </section>
+
+</body>
+</html>

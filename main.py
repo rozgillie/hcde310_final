@@ -1,6 +1,7 @@
 import urllib.parse, urllib.request, urllib.error, json
 from flask import Flask, render_template, request
 import pyaztro
+import req
 import requests
 app = Flask(__name__)
 
@@ -20,7 +21,8 @@ def safe_get(url):
 def pretty(obj):
     return json.dumps(obj, sort_keys=True, indent=2)
 
-
+#horoscope = pyaztro.Aztro(sign='virgo')
+#print(horoscope.mood)
 class spotiClient():
 
     def __init__(self):
@@ -41,7 +43,7 @@ class spotiClient():
         resp = safe_get(request)
         respdata = json.load(resp)
         self.accessToken = respdata['access_token']
-
+        
     def apiRequest(self,
         version="v1",
         endpoint="search",
@@ -81,24 +83,23 @@ def get_sign_name(bday):
 # id = response['playlists']['items'][0]['id']
 @app.route('/')
 def get_information():
-    return render_template('template.html')
-
-@app.route("/forms/notify.php")
-def get_response():
+    customized = False
+    month = request.args.get('month')
+    day = request.args.get('day')
+    id = ''
     bday = ''
-    bday = request.args.get('bday')
-    if bday != None:
-        error = False
-    else:
-        error = True
-    horoscope = pyaztro.Aztro(sign=get_sign_name(bday))
-    sign = horoscope.sign.capitalize()
-    mood = horoscope.mood
-    description = horoscope.description
-    response = spotiClient().apiRequest(params={"type": "playlist", "q": mood + " mood"})
-    id = response['playlists']['items'][0]['id']
-    src = "https://open.spotify.com/embed/playlist/{}".format(id)
-    return render_template('template2.html', src = src, bday = bday, mood = mood, sign = sign, error = error, description = description)
+    horoscope = ''
+    mood = ''
+    src = ''
+    if month and day:
+        customized = True
+        bday = "2000-{m}-{d}".format(m=month, d=day)
+        horoscope = pyaztro.Aztro(sign=get_sign_name(bday))
+        mood = horoscope.mood
+        response = spotiClient().apiRequest(params={"type":"playlist","q":mood})
+        id = response['playlists']['items'][0]['id']
+        src = "https://open.spotify.com/embed/playlist/{}".format(id)
+    return render_template('template.html', src = src, bday = bday)
 
 
 if __name__ == "__main__":

@@ -80,16 +80,7 @@ def get_sign_name(bday):
     }
     response = requests.request("GET", url, headers=headers, params=querystring)
     return response.text
-# url = "https://zodiac-sign.p.rapidapi.com/sign"
-# querystring = {"date": '2000-01-04'}
-# headers = {
-#     'x-rapidapi-key': "2db129df32msh8326f7f994b4d7bp168776jsn38211f38cdd2",
-#     'x-rapidapi-host': "zodiac-sign.p.rapidapi.com"
-# }
-# u = "https://aztro.sameerkumar.website/" + urllib.parse.urlencode(querystring, headers
-# print(u)
-# response = urllib.request.Request(url, headers, querystring)
-# get = safe_get(response)
+
 
 # main page
 @app.route('/')

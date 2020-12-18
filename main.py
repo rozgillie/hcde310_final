@@ -1,9 +1,12 @@
 import urllib.parse, urllib.request, urllib.error, json
 from flask import Flask, render_template, request
 import pyaztro
-import req
 import requests
+
+
+
 app = Flask(__name__)
+
 
 def safe_get(url):
     try:
@@ -18,89 +21,92 @@ def safe_get(url):
         print("Reason: ", e.reason)
     return None
 
+
 def pretty(obj):
     return json.dumps(obj, sort_keys=True, indent=2)
 
-#horoscope = pyaztro.Aztro(sign='virgo')
-#print(horoscope.mood)
-class spotiClient():
 
+class spotiClient():
     def __init__(self):
-        self.accessToken = None 
-        self.spotifyAuth()      
-        
+        self.accessToken = None
+        self.spotifyAuth()
+
     def spotifyAuth(self):
         from spotify_id import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
         import base64
-        authorization =  base64.standard_b64encode((SPOTIFY_CLIENT_ID +
-            ':' + SPOTIFY_CLIENT_SECRET).encode())
-        headers = {"Authorization":"Basic "+authorization.decode()}
-        params = {"grant_type" : "client_credentials"}
+        authorization = base64.standard_b64encode((SPOTIFY_CLIENT_ID +
+                                                   ':' + SPOTIFY_CLIENT_SECRET).encode())
+        headers = {"Authorization": "Basic " + authorization.decode()}
+        params = {"grant_type": "client_credentials"}
         encodedparams = urllib.parse.urlencode(params).encode()
         request = urllib.request.Request(
             'https://accounts.spotify.com/api/token',
-             data=encodedparams, headers=headers)
+            data=encodedparams, headers=headers)
         resp = safe_get(request)
         respdata = json.load(resp)
         self.accessToken = respdata['access_token']
-        
+
     def apiRequest(self,
-        version="v1",
-        endpoint="search",
-        item=None,
-        params=None, q = None):
+                   version="v1",
+                   endpoint="search",
+                   item=None,
+                   params=None, q=None):
         if self.accessToken is None:
             print(
-            "Sorry, you must have an access token for this to work.")
+                "Sorry, you must have an access token for this to work.")
             return {}
-        
+
         baseurl = "https://api.spotify.com/"
-        endpointurl = "%s%s/%s"%(baseurl,version,endpoint)
-        
+        endpointurl = "%s%s/%s" % (baseurl, version, endpoint)
+
         if item is not None:
-            endpointurl =  endpointurl + "/" + item
+            endpointurl = endpointurl + "/" + item
         if params is not None:
             fullurl = endpointurl + "?" + urllib.parse.urlencode(params)
-        
-        headers = {"Authorization":"Bearer "+self.accessToken}
+
+        headers = {"Authorization": "Bearer " + self.accessToken}
         request = urllib.request.Request(fullurl, headers=headers)
         resp = safe_get(request)
         return json.load(resp)
 
+
+# returns the name of horoscope sign based on users birthday
 def get_sign_name(bday):
     url = "https://zodiac-sign.p.rapidapi.com/sign"
-    querystring = {"date":bday}
+    querystring = {"date": bday}
     headers = {
         'x-rapidapi-key': "2db129df32msh8326f7f994b4d7bp168776jsn38211f38cdd2",
         'x-rapidapi-host': "zodiac-sign.p.rapidapi.com"
     }
     response = requests.request("GET", url, headers=headers, params=querystring)
     return response.text
+# url = "https://zodiac-sign.p.rapidapi.com/sign"
+# querystring = {"date": '2000-01-04'}
+# headers = {
+#     'x-rapidapi-key': "2db129df32msh8326f7f994b4d7bp168776jsn38211f38cdd2",
+#     'x-rapidapi-host': "zodiac-sign.p.rapidapi.com"
+# }
+# u = "https://aztro.sameerkumar.website/" + urllib.parse.urlencode(querystring, headers
+# print(u)
+# response = urllib.request.Request(url, headers, querystring)
+# get = safe_get(response)
 
-# print(get_sign_name('2000-01-04'))
-# response = spotiClient().apiRequest(params={"type":"playlist","q":'Happy'})
-# print(pretty(response['playlists']['items'][0]['id']))
-# id = response['playlists']['items'][0]['id']
+# main page
 @app.route('/')
 def get_information():
-    customized = False
-    month = request.args.get('month')
-    day = request.args.get('day')
-    id = ''
+    return render_template('template.html')
+
+
+# results page
+@app.route("/forms/notify.php")
+def get_response():
     bday = ''
-    horoscope = ''
-    mood = ''
-    src = ''
-    if month and day:
-        customized = True
-        bday = "2000-{m}-{d}".format(m=month, d=day)
-        horoscope = pyaztro.Aztro(sign=get_sign_name(bday))
-        mood = horoscope.mood
-        response = spotiClient().apiRequest(params={"type":"playlist","q":mood})
-        id = response['playlists']['items'][0]['id']
-        src = "https://open.spotify.com/embed/playlist/{}".format(id)
-    return render_template('template.html', src = src, bday = bday)
-
-
-if __name__ == "__main__":
-    app.run(host="localhost", port=8000, debug=True)
+    bday = request.args.get('bday')
+    horoscope = pyaztro.Aztro(sign=get_sign_name(bday))
+    sign = horoscope.sign.capitalize()
+    mood = horoscope.mood
+    description = horoscope.description
+    response = spotiClient().apiRequest(params={"type": "playlist", "q": mood + "&20music"})
+    id = response['playlists']['items'][0]['id']
+    src = "https://open.spotify.com/embed/playlist/{}".format(id)
+    return render_template('template2.html', src=src, bday=bday, mood=mood, sign=sign, description=description)
